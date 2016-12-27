@@ -22,7 +22,7 @@ def searchBrand(line):
 	d = eval(line)
 	if 'brand' in d:
 		if d['brand'] in brands:
-			return (d['brand'], [d['asin']])
+			return ("Swiss brand", [d])
 		else:
 			return ("No Swiss brand", 1)
 	else:
@@ -41,6 +41,12 @@ text_file = sc.textFile(metadata_path)
 counts = text_file \
              .map(searchBrand) \
              .reduceByKey(lambda a, b: a + b)
-print(counts.collect())
+products = counts.collect()
+print(products)
 
-#counts.saveAsTextFile("file:///home/staes/test.txt")
+# create json file containing only swiss products
+f = open('swiss_products.json','w')
+products = dict(products)
+for product in products['Swiss brand']:
+	f.write(str(product) + '\n')
+f.close()
