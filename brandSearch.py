@@ -1,23 +1,46 @@
 #! /bin/python
 from pyspark import SparkContext, SparkConf
+import json
+from pprint import pprint
 
+#config path
+brands_path = "brands.txt"
+metadata_path = "hdfs:///datasets/amazon-reviews/metadata.json"
+#metadata_path = "file:///home/staes/shuffled_metadata.json"
+
+
+# load the list of brands
+brands = []
+with open(brands_path) as f:
+	for line in f:
+		line = line.rstrip('\n').lower()
+		brands.append(line)
+
+# lookup if a certain brand is swiss
 def searchBrand(line):
-	if("Rolex" in line):
-		return ("Rolex", 1) 
+	line = line.rstrip('\n').lower()
+	d = eval(line)
+	if 'brand' in d:
+		if d['brand'] in brands:
+			return (d['brand'], [d['asin']])
+		else:
+			return ("No Swiss brand", 1)
 	else:
-		return ("No Brand", 1)
+		return ("No brand", 1)
 
+# load spark job
 conf = SparkConf().setAppName("SoA").setMaster("local")
 sc = SparkContext(conf=conf)
 
-metadata_path = "hdfs:///datasets/amazon-reviews/metadata.json"
-#metadata_path = "file:///home/staes/shuffled_metadata.json"
+# load metadata file
 text_file = sc.textFile(metadata_path)
-print('ok')
 
+# map reduce -> 
+# for each product lookup if it is swiss, keeps brand:productkey (map)
+# group products of the same brand, keeps brand:[productkeys] (reduce)
 counts = text_file \
              .map(searchBrand) \
              .reduceByKey(lambda a, b: a + b)
 print(counts.collect())
-#.flatMap(lambda line: line.split(" ")) \
+
 #counts.saveAsTextFile("file:///home/staes/test.txt")
