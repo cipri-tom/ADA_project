@@ -7,10 +7,9 @@ import re
 
 
 #config path
-brands_path = "brands.txt"
-brands_path2 = "all_swiss_brands"
+brands_path = "../data/wiki_brands.txt"
+brands_path2 = "../data/all_swiss_brands.pickle"
 metadata_path = "hdfs:///datasets/amazon-reviews/metadata.json"
-#metadata_path = "file:///home/staes/shuffled_metadata.json"
 
 
 # load the list of brands
@@ -20,7 +19,7 @@ with open(brands_path) as f:
 		line = line.rstrip('\n').lower()
 		brands.append(line)
 
-with open ('all_swiss_brands', 'rb') as fp:
+with open(brands_path2, 'rb') as fp:
     new_brands = pickle.load(fp)
 
 # clean brand data
@@ -45,7 +44,7 @@ def searchBrand(line):
 		return ("No brand", 1)
 
 # load spark job
-conf = SparkConf().setAppName("SoA").setMaster("local")
+conf = SparkConf().setAppName("SoA")
 sc = SparkContext(conf=conf)
 
 # load metadata file
@@ -65,7 +64,7 @@ print("finished map reduce")
 #print(products)
 
 # create json file containing only swiss products
-f = open('swiss_products.json','w')
+f = open('../data/swiss_products.json','w')
 products = dict(products)
 for product in products['Swiss brand']:
 	f.write(str(product) + '\n')
